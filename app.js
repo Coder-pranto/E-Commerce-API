@@ -9,6 +9,7 @@ const port = process.env.PORT || 5000
 const colors = require('colors');
 const cors = require('cors');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 require('express-async-errors');
 
@@ -20,14 +21,18 @@ const authRouter = require('./routes/authRoutes');
 //middleware
 app.use(morgan('tiny'));
 app.use(express.json());
+app.use(cookieParser())
 
 app.use('/api/v1/auth', authRouter);
 
-app.get('/' , (req , res)=>{
+app.get('/', (req, res) => {
+  res.send('hello from simple server :)');
+});
 
-   res.send('hello from simple server :)')
-
-})
+app.get('/cookie', (req, res) => {
+  console.log(req.cookies);
+  res.send('check in terminal');
+});
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
