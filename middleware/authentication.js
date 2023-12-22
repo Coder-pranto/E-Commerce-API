@@ -8,9 +8,8 @@ const authenticateUser = async(req,res,next)=>{
         throw new CustomError.UnauthenticatedError("Authentication Invalid!");
     }
     try {
-        const {name, userID, role} = isTokenValid(token);
-        // console.log({name,userID, role});
-        req.user = {name,userID, role}
+        const { name, userId, role } = isTokenValid(token);
+        req.user = { name, userId, role };
         next();
     } catch (error) {
         throw new CustomError.UnauthenticatedError("Authentication Invalid!");
