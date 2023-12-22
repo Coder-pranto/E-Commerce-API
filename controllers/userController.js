@@ -4,6 +4,7 @@ const CustomError = require('../errors');
 
 
 const getAllUsers = async (req, res) => {
+  console.log(req.user);
   const users = await User.find({ role: 'user' }).select('-password');
   res.status(StatusCodes.OK).json({ users });
 };
@@ -17,7 +18,7 @@ const getSingleUser = async (req, res) => {
 };
 
 const showCurrentUser = async (req, res) => {
-
+  res.send('show me')
 };
 
 const updateUser = async (req, res) => {
