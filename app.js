@@ -21,7 +21,7 @@ const authRouter = require('./routes/authRoutes');
 //middleware
 app.use(morgan('tiny'));
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser(process.env.COOKIE_SECRET))
 
 app.use('/api/v1/auth', authRouter);
 
@@ -30,7 +30,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/cookie', (req, res) => {
-  console.log(req.cookies);
+//   console.log(req.cookies);
+  console.log(req.signedCookies);
   res.send('check in terminal');
 });
 

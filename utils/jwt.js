@@ -13,7 +13,12 @@ const attachCookiesToResponse = ({res, user})=>{
     const token = createJWT(user);
     const oneDay = 1000*60*60*24;
   
-    res.cookie('cookieName', token , { expires: new Date(Date.now() + oneDay), httpOnly: true })
+    res.cookie('cookieName', token, {
+      expires: new Date(Date.now() + oneDay),
+      httpOnly: true,
+      secure: process.env.NODE_ENV ==='production',
+      signed: true,
+    });
 }
 
 module.exports = {

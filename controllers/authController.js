@@ -13,17 +13,38 @@ const register = async (req, res) => {
   const user = await User.create({ name, email, password, role });
 
   const tokenUser = {name: user.name, email:user.email, role: user.role};
-  
+
   attachCookiesToResponse({res, user:tokenUser});
 
   res.status(StatusCodes.CREATED).json({user});
 };
 
 const login = async (req, res) => {
-  res.send('login');
+  const { email, password } =req.body;
+  if(!email || !password){
+    throw new CustomError.BadRequestError("Email and Password are required!");
+  }
+
+  const user = await User.findOne({email});
+  const checkPassword = await user.comparePassword(password); //important
+  if(!user || !checkPassword){
+    throw new CustomError.BadRequestError('Invalid Credentials!')
+  }
+
+  const tokenUser = {name: user.name, email:user.email, role: user.role};
+  attachCookiesToResponse({res, user:tokenUser});
+
+  res.status(StatusCodes.OK).json({user});
+
 };
+
+
 const logout = async (req, res) => {
-  res.send('logout');
+  res.cookie('cookieName', 'logout', {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
+  res.status(StatusCodes.OK).json({msg: "logout successfully."});
 };
 
 module.exports = {
