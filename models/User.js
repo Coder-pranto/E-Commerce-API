@@ -30,7 +30,7 @@ const UserSchema = mongoose.Schema({
 });
 
 
-UserSchema.pre('save',async function(){
+UserSchema.pre('save', async function(){
   const saltRounds = 10;
   this.password = await bcrypt.hash(this.password, saltRounds) 
 });
