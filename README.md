@@ -1,5 +1,6 @@
 # E-Commerce-API
 
+ > **Note**:  There implemented a comprehensive e-commerce web application featuring essential functionality, including user authentication, product browsing, cart management, and checkout processes. Integrated a suite of robust general APIs to enable seamless interactions between users, products, and transactions. These APIs facilitate smooth communication across various components of the application, ensuring a cohesive and efficient user experience.
 
 
 #### Create Docs
