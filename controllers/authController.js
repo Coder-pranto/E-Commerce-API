@@ -2,6 +2,8 @@ const User = require('../models/User');
 const { StatusCodes } = require('http-status-codes');
 const CustomError = require('../errors');
 const {attachCookiesToResponse} = require('../utils');
+const crypto = require('crypto');
+
 
 const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -10,13 +12,11 @@ const register = async (req, res) => {
   const isFirstAccount = await User.countDocuments({});
   const role = isFirstAccount === 0 ? 'admin':'user';
 
-  const user = await User.create({ name, email, password, role });
+  const verificationToken = crypto.randomBytes(40).toString("hex");
 
-  const tokenUser = {name: user.name, userId:user._id, role: user.role};
+  const user = await User.create({ name, email, password, role, verificationToken });
 
-  attachCookiesToResponse({res, user:tokenUser});
-
-  res.status(StatusCodes.CREATED).json({user});
+  res.status(StatusCodes.CREATED).json({msg:"Success! Please check your email to verify your account", verificationToken: user.verificationToken });
 };
 
 const login = async (req, res) => {
@@ -31,12 +31,37 @@ const login = async (req, res) => {
     throw new CustomError.BadRequestError('Invalid Credentials!')
   }
 
+  if(!user.isVerified){
+    throw new CustomError.UnauthenticatedError('Please verify your email to log in!')
+  }
+
   const tokenUser = {name: user.name, userId:user._id, role: user.role};
   attachCookiesToResponse({res, user:tokenUser});
 
   res.status(StatusCodes.OK).json({user});
 
 };
+
+
+const verifyEmail = async(req,res)=>{
+  const {verificationToken, email} = req.body;
+
+  const user = await User.findOne({email});
+  if(!user){
+    throw new CustomError.UnauthenticatedError('Verification Failed');
+  }
+  if(user.verificationToken !== verificationToken){
+    throw new CustomError.UnauthenticatedError('Invalid Token');
+  }
+
+  user.isVerified = true;
+  user.verified = Date.now();
+  user.verificationToken = "";
+  await user.save();
+
+  res.status(StatusCodes.OK).json({msg:"Email Verified!"});
+}
+
 
 
 const logout = async (req, res) => {
@@ -49,6 +74,7 @@ const logout = async (req, res) => {
 
 module.exports = {
   register,
+  verifyEmail,
   login,
   logout,
 };
