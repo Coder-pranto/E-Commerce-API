@@ -1,9 +1,8 @@
 const User = require('../models/User');
 const { StatusCodes } = require('http-status-codes');
 const CustomError = require('../errors');
-const {attachCookiesToResponse} = require('../utils');
+const {attachCookiesToResponse, sendVerificationEmail} = require('../utils');
 const crypto = require('crypto');
-
 
 const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -13,10 +12,14 @@ const register = async (req, res) => {
   const role = isFirstAccount === 0 ? 'admin':'user';
 
   const verificationToken = crypto.randomBytes(40).toString("hex");
+  // const origin = 'http://localhost:5000'; // do use this origin for frontend
+  const origin = 'http://localhost:5000/api/v1';
 
   const user = await User.create({ name, email, password, role, verificationToken });
 
-  res.status(StatusCodes.CREATED).json({msg:"Success! Please check your email to verify your account", verificationToken: user.verificationToken });
+  await sendVerificationEmail({name:user.name, email:user.email, verificationToken:user.verificationToken, origin});
+
+  res.status(StatusCodes.CREATED).json({msg:"Success! Please check your email to verify your account"});
 };
 
 const login = async (req, res) => {

@@ -42,11 +42,11 @@ app.get('/', (req, res) => {
   res.send('hello from simple server :)');
 });
 
-app.get('/cookie', (req, res) => {
-//   console.log(req.cookies);
-  console.log(req.signedCookies);
-  res.send('check in terminal');
-});
+// app.get('/cookie', (req, res) => {
+// //   console.log(req.cookies);
+//   console.log(req.signedCookies);
+//   res.send('check in terminal');
+// });
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
