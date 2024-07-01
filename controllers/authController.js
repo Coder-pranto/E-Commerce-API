@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Token = require('../models/Token');
 const { StatusCodes } = require('http-status-codes');
 const CustomError = require('../errors');
 const {attachCookiesToResponse, sendVerificationEmail} = require('../utils');
@@ -14,6 +15,22 @@ const register = async (req, res) => {
   const verificationToken = crypto.randomBytes(40).toString("hex");
   // const origin = 'http://localhost:5000'; // do use this origin for frontend
   const origin = 'http://localhost:5000/api/v1';
+
+  // const tempOrigin = req.get('origin'); // this is indicate for server
+  // const protocol = req.protocol; // this is indicate for server
+  // const host = req.get('host'); // this is indicate for server
+
+  // const clientOrigin = req.get('referer');// this is indicate for client
+  // const forwardedHost = req.get('x-forwarded-host'); // this is indicate for  client
+  // const forwardedProtocol = req.get('x-forwarded-proto'); // this is indicate for  client
+
+  // console.log("temporigin : ",tempOrigin);
+  // console.log("protocol", protocol);
+  // console.log("host :", host);
+  // console.log("forwardedHost", forwardedHost);
+  // console.log("forwardedProtocol", forwardedProtocol);
+  // console.log("clientOrigin:", clientOrigin);
+
 
   const user = await User.create({ name, email, password, role, verificationToken });
 
@@ -38,10 +55,24 @@ const login = async (req, res) => {
     throw new CustomError.UnauthenticatedError('Please verify your email to log in!')
   }
 
-  const tokenUser = {name: user.name, userId:user._id, role: user.role};
-  attachCookiesToResponse({res, user:tokenUser});
+  const tokenUser = {name: user.name, userId:user._id, role: user.role}; // user basic info
 
-  res.status(StatusCodes.OK).json({user});
+  let refreshToken = " ";
+
+  //check existing token
+  refreshToken = crypto.randomBytes(40).toString('hex');
+  const ip = req.ip;
+  const userAgent = req.headers['user-agent'];
+
+  const userToken = {refreshToken, ip, userAgent, user: user._id};
+
+  const token =  await Token.create(userToken);
+
+  // attachCookiesToResponse({res, user:tokenUser});
+
+  // res.status(StatusCodes.OK).json({user});
+
+  res.status(StatusCodes.OK).json({user:tokenUser, token:userToken});
 
 };
 
