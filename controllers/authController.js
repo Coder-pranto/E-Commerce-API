@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Token = require('../models/Token');
 const { StatusCodes } = require('http-status-codes');
 const CustomError = require('../errors');
-const {attachCookiesToResponse, sendVerificationEmail} = require('../utils');
+const {createTokenUser, attachCookiesToResponse, sendVerificationEmail} = require('../utils');
 const crypto = require('crypto');
 
 const register = async (req, res) => {
@@ -40,40 +40,39 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } =req.body;
-  if(!email || !password){
-    throw new CustomError.BadRequestError("Email and Password are required!");
+  const { email, password } = req.body;
+  if (!email || !password) {
+    throw new CustomError.BadRequestError('Email and Password are required!');
   }
 
-  const user = await User.findOne({email});
+  const user = await User.findOne({ email });
   const checkPassword = await user.comparePassword(password); //important
-  if(!user || !checkPassword){
-    throw new CustomError.BadRequestError('Invalid Credentials!')
+  if (!user || !checkPassword) {
+    throw new CustomError.BadRequestError('Invalid Credentials!');
   }
 
-  if(!user.isVerified){
-    throw new CustomError.UnauthenticatedError('Please verify your email to log in!')
+  if (!user.isVerified) {
+    throw new CustomError.UnauthenticatedError(
+      'Please verify your email to log in!'
+    );
   }
 
-  const tokenUser = {name: user.name, userId:user._id, role: user.role}; // user basic info
+  const tokenUser = createTokenUser(user); // user basic info
 
-  let refreshToken = " ";
+  let refreshToken = ' ';
 
   //check existing token
   refreshToken = crypto.randomBytes(40).toString('hex');
   const ip = req.ip;
   const userAgent = req.headers['user-agent'];
 
-  const userToken = {refreshToken, ip, userAgent, user: user._id};
+  const userToken = { refreshToken, ip, userAgent, user: user._id };
 
-  const token =  await Token.create(userToken);
+  await Token.create(userToken);
 
-  // attachCookiesToResponse({res, user:tokenUser});
+  attachCookiesToResponse({ res, user: tokenUser, refreshToken });
 
-  // res.status(StatusCodes.OK).json({user});
-
-  res.status(StatusCodes.OK).json({user:tokenUser, token:userToken});
-
+  res.status(StatusCodes.OK).json({ user: tokenUser });
 };
 
 
