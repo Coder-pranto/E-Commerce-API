@@ -39,6 +39,8 @@ const register = async (req, res) => {
   res.status(StatusCodes.CREATED).json({msg:"Success! Please check your email to verify your account"});
 };
 
+
+
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -62,6 +64,18 @@ const login = async (req, res) => {
   let refreshToken = ' ';
 
   //check existing token
+  const existingToken = await Token.findOne({ user: user._id });
+
+  if (existingToken) {
+    const { isValid } = existingToken;
+    if (!isValid) {
+      throw new CustomError.UnauthenticatedError('invalid crediential');
+    }
+    refreshToken = existingToken.refreshToken;
+    attachCookiesToResponse({ res, user: tokenUser, refreshToken });
+    return res.status(StatusCodes.OK).json({ user: tokenUser });
+  }
+
   refreshToken = crypto.randomBytes(40).toString('hex');
   const ip = req.ip;
   const userAgent = req.headers['user-agent'];
