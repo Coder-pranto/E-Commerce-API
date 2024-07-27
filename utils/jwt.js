@@ -1,9 +1,4 @@
-
-
 //** this for multiple cookies */
-
-
-
 const jwt = require('jsonwebtoken');
 
 const createJWT = ({payload})=>{
@@ -27,6 +22,7 @@ const attachCookiesToResponse = ({ res, user, refreshToken }) => {
     secure: process.env.NODE_ENV === 'production',
     signed: true,
     expires: new Date(Date.now() + oneDay),
+    // maxAge:1000,
   });
 
   res.cookie('refreshToken', refreshTokenJWT, {

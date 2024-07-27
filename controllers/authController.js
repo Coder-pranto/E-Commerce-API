@@ -112,7 +112,13 @@ const verifyEmail = async(req,res)=>{
 
 
 const logout = async (req, res) => {
-  res.cookie('cookieName', 'logout', {
+  await Token.findOneAndDelete({user:req.user.userId});
+
+  res.cookie('accessToken', 'logout', {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
+  res.cookie('refreshToken', 'logout', {
     expires: new Date(Date.now()),
     httpOnly: true,
   });
