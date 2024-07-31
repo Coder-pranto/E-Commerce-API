@@ -33,7 +33,13 @@ const UserSchema = mongoose.Schema({
     type:Boolean,
     default:false
   },
-  verified:Date
+  verified:Date,
+  passwordToken:{
+    type:String,
+  },
+  passwordTokenExpirationDate:{
+    type: Date,
+  },
 });
 
 

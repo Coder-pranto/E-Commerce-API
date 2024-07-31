@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Token = require('../models/Token');
 const { StatusCodes } = require('http-status-codes');
 const CustomError = require('../errors');
-const {createTokenUser, attachCookiesToResponse, sendVerificationEmail} = require('../utils');
+const {createTokenUser, attachCookiesToResponse, sendVerificationEmail, sendResetPasswordEmail} = require('../utils');
 const crypto = require('crypto');
 
 const register = async (req, res) => {
@@ -125,9 +125,43 @@ const logout = async (req, res) => {
   res.status(StatusCodes.OK).json({msg: "logout successfully."});
 };
 
+
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new CustomError.BadRequestError('Please Provide Valid Email!');
+  }
+
+  const user = await User.findOne({ email });
+
+  if (user) {
+    const passwordToken = crypto.randomBytes(70).toString('hex');
+    //send email
+     await sendResetPasswordEmail({
+      name : user.name,
+      email: user.email,
+      token:passwordToken,
+      origin: 'http://localhost:5000/api/v1'
+     })
+    const tenMinutes = 1000 * 60 * 10;
+
+    user.passwordToken = passwordToken;
+    user.passwordExpirationDate = tenMinutes;
+
+    await user.save();
+  }
+  res.status(StatusCodes.OK).json({ msg: 'please check your email.' });
+};
+
+const resetPassword = async(req, res) =>{
+  res.send("reset password");
+}
+
 module.exports = {
   register,
   verifyEmail,
   login,
   logout,
+  forgotPassword,
+  resetPassword
 };
