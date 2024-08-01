@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Token = require('../models/Token');
 const { StatusCodes } = require('http-status-codes');
 const CustomError = require('../errors');
-const {createTokenUser, attachCookiesToResponse, sendVerificationEmail, sendResetPasswordEmail} = require('../utils');
+const {createTokenUser, attachCookiesToResponse, sendVerificationEmail, sendResetPasswordEmail, createHash} = require('../utils');
 const crypto = require('crypto');
 
 const register = async (req, res) => {
@@ -145,7 +145,7 @@ const forgotPassword = async (req, res) => {
      })
     const tenMinutes = 1000 * 60 * 10;
 
-    user.passwordToken = passwordToken;
+    user.passwordToken = createHash(passwordToken);
     user.passwordExpirationDate = tenMinutes;
 
     await user.save();
@@ -154,7 +154,23 @@ const forgotPassword = async (req, res) => {
 };
 
 const resetPassword = async(req, res) =>{
-  res.send("reset password");
+  const { token, email, password } = req.body;
+  if(!token || !email || !password){
+    throw new CustomError.BadRequestError("please provide all values.");
+  }
+  const user  = await User.findOne({email});
+  if(user){
+    const currentDate = new Date();
+
+    if(user.passwordToken === createHash(token) && passwordExpirationDate>currentDate){
+      user.password = password;
+      user.passwordToken =null;
+      user.passwordExpirationDate = null;
+    }
+
+    await user.save();
+  }
+  res.status(StatusCodes.OK).json({ msg: 'Password reset successful.'});
 }
 
 module.exports = {
